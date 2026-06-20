@@ -1,49 +1,30 @@
-# FINP
-unless you are tied into Burger King you are viewing IP code Fairuse. hit us up 
-# Frostoise
+# Frostoise (FARE)
 
 **FreeBSD-based Operating System with Blockchain Integration**  
 Post-2038 Compliant | Built for Quick-Service Restaurants
 
-Frostoise is a modern, Windows-free operating system designed specifically for restaurant operations. It combines the stability of FreeBSD with blockchain technology for accurate counting, safety audits, compliance, and tamper-proof logging.
+Frostoise (also referred to as FARE) is a modern, Windows-free operating system designed specifically for restaurant operations. It is built on **FreeBSD** roots and uses blockchain technology for reliable inventory, safety audits, and transaction verification.
 
-## Core Philosophy
+## Core Vision
 - Make life easier for crew members
-- Eliminate Windows dependency in back-of-house (PARE)
-- Provide real data ownership and privacy
-- Build systems that actually work on the floor
+- Fix broken specialty monitor handling (burger boards & fry stations)
+- Reduce redundancy and human error
+- Give operators real data ownership and privacy
 
-## Key Features
+## Key Components
 
-- **FreeBSD Foundation** — Berkeley Standard roots, fully post-2038 compliant
-- **Blockchain Layer** — Injected for counting, safety audits, and compliance
-- **Voice-First Ordering** — Multilingual speech-to-text + text-to-speech
-- **Automatic Camera Counting** — IoT camera module (IOTc.py)
-- **Real-Time Temperature Monitoring** — Fryer and holding unit gauges (IOTT.py)
-- **Front-to-Back Bridge** — Connects ordering to kitchen (F2B_Bridge.py)
-- **Crew Sign-Off** — Cryptographic confirmation with Monero-style view keys
-- **Specialty Monitor Support** — Properly filters content for kitchen displays (unlike Windows)
+| Component              | Description                                      | File |
+|------------------------|--------------------------------------------------|------|
+| **F2B Bridge**         | Front-to-back communication                      | `F2B_Bridge.py` |
+| **Grayson's Wallet**   | Blockchain accounting (5-min blocks, masternodes) | `graysons_wallet.py` |
+| **Burger of Things**   | IoT + Voice-to-text ordering                     | `BurgerOfThings.py` |
+| **Cherry Eyes**        | Simple end-of-night camera counter               | `chickenfry.py` |
+| **Frostpair**          | Web-based inventory & companion app              | `frostpair_inventory.html` |
+| **IOTT**               | Temperature monitoring with warnings             | `IOTT.py` |
+| **IOTc**               | Camera-based automatic counting                  | `IOTc.py` |
 
-## Components
-
-| File                    | Purpose                              |
-|-------------------------|--------------------------------------|
-| `F2B_Bridge.py`         | Front-to-back communication          |
-| `Count.py`              | Fry station inventory system         |
-| `IOTT.py`               | Temperature monitoring & alerts      |
-| `IOTc.py`               | Camera-based automatic counting      |
-| `frostpair_inventory.html` | Web-based inventory counter       |
-| `generate_view_key.py`  | Monero-style view keys for stores    |
-| `frostoise_vnc_setup.sh`| Easy VNC testing environment         |
-
-## Quick Start (Linux Mint / Ubuntu)
+## Quick Start (Linux)
 
 ```bash
-# Install dependencies
-sudo apt update
-sudo apt install python3 python3-pip python3-venv
-
-# Run the bridge + IoT modules
 python3 F2B_Bridge.py &
-python3 IOTT.py &
-python3 IOTc.py &
+python3 BurgerOfThings.py
