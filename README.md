@@ -1,30 +1,34 @@
-# Frostoise (FARE)
+# FINP — FARE + Frostchain Integration Node Project
 
-**FreeBSD-based Operating System with Blockchain Integration**  
-Post-2038 Compliant | Built for Quick-Service Restaurants
+**Restaurant Operating System**  
+Autonomous Quality Assurance • Real Incentives • Manager-First Design
 
-Frostoise (also referred to as FARE) is a modern, Windows-free operating system designed specifically for restaurant operations. It is built on **FreeBSD** roots and uses blockchain technology for reliable inventory, safety audits, and transaction verification.
+## Demo
 
-## Core Vision
-- Make life easier for crew members
-- Fix broken specialty monitor handling (burger boards & fry stations)
-- Reduce redundancy and human error
-- Give operators real data ownership and privacy
+Try it instantly: [Open Demo GUI](https://frosTether.github.io/FINP) (or run locally with Docker)
 
-## Key Components
+## What It Does
 
-| Component              | Description                                      | File |
-|------------------------|--------------------------------------------------|------|
-| **F2B Bridge**         | Front-to-back communication                      | `F2B_Bridge.py` |
-| **Grayson's Wallet**   | Blockchain accounting (5-min blocks, masternodes) | `graysons_wallet.py` |
-| **Burger of Things**   | IoT + Voice-to-text ordering                     | `BurgerOfThings.py` |
-| **Cherry Eyes**        | Simple end-of-night camera counter               | `chickenfry.py` |
-| **Frostpair**          | Web-based inventory & companion app              | `frostpair_inventory.html` |
-| **IOTT**               | Temperature monitoring with warnings             | `IOTT.py` |
-| **IOTc**               | Camera-based automatic counting                  | `IOTc.py` |
+- AI-powered waste logging with manager spend key signing
+- Frostchain IoT temperature monitoring with autonomous rules (poultry < 165°F = auto flag)
+- Daily FsZT reward injection at 01:37 AM ET based on real compliance
+- Plug-and-play corporate policies
+- Private audit layer with view/spend key permissions
+- Full chain-of-command hierarchy (`XXXX.frostchain` IDs + directories)
 
-## Quick Start (Linux)
+## Pricing (Early Access)
+
+| Plan          | Price per Location | What's Included                     |
+|---------------|--------------------|-------------------------------------|
+| Starter       | $149/mo           | GUI + Basic logging + IoT           |
+| Pro           | $299/mo           | Full autonomous rules + FsZT + Dashboard |
+| Enterprise    | Custom            | White-label, custom policies, dedicated support |
+
+**Also available:** Revenue share on FsZT generated + one-time onboarding.
+
+## Quick Start
 
 ```bash
-python3 F2B_Bridge.py &
-python3 BurgerOfThings.py
+git clone https://github.com/FrosTether/FINP.git
+cd FINP
+docker-compose up -d gui middleware
