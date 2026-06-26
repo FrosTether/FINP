@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoReso Local • Cybernetic Radar & Resonance Mapper</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+<style>
+  body { background: #050814; color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  .grid-bg { background-image: radial-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 16px 16px; }
+  .terminal-border { border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
+  .metric-value { font-variant-numeric: tabular-nums; text-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+</style>
+</head>
+<body class="min-h-screen p-4 grid-bg">
+<div class="max-w-5xl mx-auto">
+  
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b border-blue-900/40">
+    <div>
+      <h1 class="text-3xl font-black tracking-tight text-white flex items-center gap-2">
+        <span class="inline-block w-3 h-3 bg-blue-500 animate-pulse rounded-full"></span> ECHO-RESO // OPTIMIZED
+      </h1>
+      <p class="text-blue-400 text-xs mt-0.5 font-semibold">Stereo Split Array Mode • Discrete Earbud/Speaker Routing</p>
+    </div>
+    <div class="mt-3 md:mt-0 flex gap-2">
+      <button onclick="requestPermissions()" id="perm-btn" class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-500 text-black rounded-lg transition">
+        🔒 Calibrate IMU & Audio
+      </button>
+      <div class="text-right text-[11px] opacity-70 border-l border-blue-900/40 pl-3">
+        <div>Left Channel: <span class="text-blue-400 font-bold">ANCOOM (Solfeggio)</span></div>
+        <div>Right Channel: <span class="text-violet-400 font-bold">Earbuds (Sonar Chirp)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-[11px]">
+    <div id="status-imu" class="px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800">IMU: <span class="text-red-400">OFFLINE</span></div>
+    <div id="status-audio" class="px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800">DSP Buffer: <span class="text-amber-400">READY</span></div>
+    <div id="status-ws" class="px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800">IoT Stack: <span class="text-blue-400">WebSocket Idle</span></div>
+    <div class="px-3 py-2 bg-slate-900/80 rounded-xl border border-blue-900/30 text-white font-bold">Points: <span id="point-count" class="text-emerald-400">0</span></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <div class="lg:col-span-4 flex flex-col gap-4">
+      <div class="terminal-border bg-slate-950/90 rounded-2xl p-4">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-blue-400 mb-3">🎵 Solfeggio Tones (Left Channel Output)</h2>
+        <div class="grid grid-cols-3 gap-1.5 mb-3">
+          <button onclick="playSolfeggio(396)" class="bg-blue-950/60 border border-blue-800/40 px-2 py-2.5 rounded-xl text-xs font-bold text-white">396 Hz</button>
+          <button onclick="playSolfeggio(528)" class="bg-blue-950/60 border border-blue-800/40 px-2 py-2.5 rounded-xl text-xs font-bold text-white">528 Hz</button>
+          <button onclick="playSolfeggio(639)" class="bg-blue-950/60 border border-blue-800/40 px-2 py-2.5 rounded-xl text-xs font-bold text-white">639 Hz</button>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="playHealingSequence()" class="flex-1 text-xs uppercase font-bold bg-blue-600 text-white px-3 py-2.5 rounded-xl">Cycle Matrix</button>
+          <button onclick="stopAllAudio()" class="text-xs uppercase font-bold bg-red-950 text-red-200 border border-red-700/50 px-3 py-2.5 rounded-xl">Mute</button>
+        </div>
+      </div>
+
+      <div class="terminal-border bg-slate-950/90 rounded-2xl p-4">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3">⚡ WebSocket Node Matrix (Option A)</h2>
+        <div class="space-y-2 mb-3">
+          <input id="node1-ip" type="text" value="192.168.1.101" class="w-full text-xs bg-black/60 border border-slate-800 rounded px-2 py-1 font-mono text-emerald-400">
+          <input id="node2-ip" type="text" value="192.168.1.102" class="w-full text-xs bg-black/60 border border-slate-800 rounded px-2 py-1 font-mono text-emerald-400">
+        </div>
+        <button onclick="connectIoTNodes()" class="w-full text-xs py-2 bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 rounded-xl font-bold uppercase">Initialize Network Array</button>
+      </div>
+
+      <div class="terminal-border bg-slate-950/90 rounded-2xl p-4 flex-1 min-h-[140px] flex flex-col justify-between">
+        <canvas id="scope-canvas" class="w-full h-24 bg-black/60 rounded-xl border border-slate-900"></canvas>
+      </div>
+    </div>
+
+    <div class="lg:col-span-8 flex flex-col gap-4">
+      <div class="terminal-border bg-slate-950/90 rounded-2xl p-4">
+        <div class="flex flex-col sm:flex-row gap-2 mb-3">
+          <button onclick="startMappingSession()" class="flex-1 bg-violet-600 text-white px-4 py-3 rounded-xl font-bold uppercase text-xs">Engage Sonar Scanner</button>
+          <button onclick="stopMappingSession()" class="px-4 py-3 bg-slate-800 text-white rounded-xl text-xs uppercase font-bold">Disengage</button>
+        </div>
+        <div class="grid grid-cols-2 gap-3 bg-black/50 rounded-xl p-3 border border-slate-900/60">
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">Calculated Range</div>
+            <div id="live-distance" class="metric-value text-3xl font-bold text-blue-400 font-mono">— m</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 tracking-wider">Confidence</div>
+            <div id="dsp-confidence" class="metric-value text-3xl font-bold text-violet-400 font-mono">0.0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="terminal-border bg-slate-950/90 rounded-2xl p-4 md:col-span-5 flex flex-col items-center justify-center">
+          <canvas id="radar-canvas" width="180" height="180" class="rounded-full border border-blue-900/40 bg-black/40"></canvas>
+        </div>
+        <div class="terminal-border bg-slate-950/90 rounded-2xl p-4 md:col-span-7 flex flex-col">
+          <div id="three-container" class="w-full h-[200px] bg-black/80 rounded-xl border border-slate-900 overflow-hidden relative"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let synth, audioCtx, analyser, pannerLeft, pannerRight;
+let wsNode1, wsNode2;
+let currentHeading = 0; 
+let isMapping = false;
+let mappingTimer = null;
+let micStream = null;
+let scriptProcessor = null;
+
+const SAMPLING_RATE = 44100;
+const CHIRP_DURATION = 0.17; 
+const CHIRP_LENGTH_SAMPLES = Math.floor(SAMPLING_RATE * CHIRP_DURATION);
+const referenceChirp = new Float32Array(CHIRP_LENGTH_SAMPLES);
+
+for (let i = 0; i < CHIRP_LENGTH_SAMPLES; i++) {
+  let t = i / SAMPLING_RATE;
+  let phase = 2 * Math.PI * (1800 * t + ((6200 - 1800) / (2 * CHIRP_DURATION)) * t * t);
+  referenceChirp[i] = Math.sin(phase);
+}
+
+function requestPermissions() {
+  initAudioInfrastructure();
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation, true);
+    }).catch(console.error);
+  } else {
+    window.addEventListener('deviceorientation', handleOrientation, true);
+  }
+}
+
+function handleOrientation(event) {
+  currentHeading = event.webkitCompassHeading ? event.webkitCompassHeading : (360 - (event.alpha || 0));
+  document.getElementById('status-imu').innerHTML = `IMU: <span class="text-emerald-400 font-bold">ONLINE</span> (${Math.floor(currentHeading)}°)`;
+  drawRadarView();
+}
+
+function initAudioInfrastructure() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  
+  pannerLeft = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+  pannerRight = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+  
+  if(pannerLeft) pannerLeft.pan.setValueAtTime(-1, audioCtx.currentTime); // Solfeggio -> Left (Speaker)
+  if(pannerRight) pannerRight.pan.setValueAtTime(1, audioCtx.currentTime);  // Chirp -> Right (Earbuds)
+
+  synth = new Tone.Synth({ oscillator: { type: "sine" } });
+  if(pannerLeft) {
+    Tone.connect(synth, pannerLeft);
+    pannerLeft.connect(audioCtx.destination);
+  } else {
+    synth.toDestination();
+  }
+
+  document.getElementById('status-audio').innerHTML = `DSP Buffer: <span class="text-emerald-400 font-bold">ENGAGED</span>`;
+  drawOscilloscopeLoop();
+}
+
+function playSolfeggio(freq) {
+  initAudioInfrastructure();
+  stopAllAudio();
+  synth.triggerAttack(freq);
+}
+
+function playHealingSequence() {
+  initAudioInfrastructure();
+  stopAllAudio();
+  const seq = [396, 528, 639];
+  let idx = 0;
+  const loop = () => {
+    if (idx >= seq.length) return;
+    synth.triggerAttack(seq[idx]);
+    setTimeout(() => { synth.triggerRelease(); idx++; setTimeout(loop, 400); }, 4000);
+  };
+  loop();
+}
+
+function stopAllAudio() { if (synth) synth.triggerRelease(); }
+
+function emitChirpPulse() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'sawtooth';
+  if(pannerRight) {
+    osc.connect(gain);
+    gain.connect(pannerRight);
+    pannerRight.connect(audioCtx.destination);
+  } else {
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+  }
+  
+  const now = audioCtx.currentTime;
+  osc.frequency.setValueAtTime(1800, now);
+  osc.frequency.linearRampToValueAtTime(6200, now + CHIRP_DURATION);
+  gain.gain.setValueAtTime(0.4, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + CHIRP_DURATION + 0.02);
+  
+  osc.start(now);
+  osc.stop(now + CHIRP_DURATION + 0.03);
+  broadcastToIoTNodes({ command: "chirp", timestamp: Date.now() });
+}
+
+function executeCrossCorrelation(inputPCMBuffer) {
+  let N = inputPCMBuffer.length;
+  let M = referenceChirp.length;
+  let correlationMax = 0;
+  let peakIdx = -1;
+
+  for (let delay = 0; delay < N - M; delay++) {
+    let dotProduct = 0;
+    for (let sample = 0; sample < M; sample++) {
+      dotProduct += inputPCMBuffer[delay + sample] * referenceChirp[sample];
+    }
+    if (dotProduct > correlationMax) {
+      correlationMax = dotProduct;
+      peakIdx = delay;
+    }
+  }
+
+  let confidence = Math.min((correlationMax * 8), 100).toFixed(1);
+  if (peakIdx > 40 && confidence > 15) {
+    let range = ((peakIdx / SAMPLING_RATE) * 343.2) / 2;
+    if (range > 0.2 && range < 8.0) {
+      document.getElementById('live-distance').textContent = range.toFixed(2) + ' m';
+      document.getElementById('dsp-confidence').textContent = confidence + '%';
+      injectPointIn3DSpace(range);
+    }
+  }
+}
+
+function connectIoTNodes() {
+  wsNode1 = new WebSocket(`ws://${document.getElementById('node1-ip').value}:81`);
+  wsNode2 = new WebSocket(`ws://${document.getElementById('node2-ip').value}:81`);
+  wsNode1.onopen = wsNode2.onopen = () => {
+    document.getElementById('status-ws').innerHTML = `IoT Stack: <span class="text-emerald-400 font-bold">Synced</span>`;
+  };
+}
+
+function broadcastToIoTNodes(payload) {
+  const msg = JSON.stringify(payload);
+  if (wsNode1 && wsNode1.readyState === WebSocket.OPEN) wsNode1.send(msg);
+  if (wsNode2 && wsNode2.readyState === WebSocket.OPEN) wsNode2.send(msg);
+}
+
+async function startMappingSession() {
+  if (isMapping) return;
+  initAudioInfrastructure();
+  isMapping = true;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const src = audioCtx.createMediaStreamSource(micStream);
+    scriptProcessor = audioCtx.createScriptProcessor(2048, 1, 1);
+    src.connect(scriptProcessor);
+    scriptProcessor.connect(audioCtx.destination);
+    scriptProcessor.onaudioprocess = (e) => {
+      if (!isMapping) return;
+      executeCrossCorrelation(e.inputBuffer.getChannelData(0));
+    };
+    mappingTimer = setInterval(emitChirpPulse, 2500);
+  } catch (err) { isMapping = false; }
+}
+
+function stopMappingSession() {
+  isMapping = false;
+  if (mappingTimer) clearInterval(mappingTimer);
+  if (scriptProcessor) scriptProcessor.disconnect();
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+}
+
+function injectPointIn3DSpace(distance) {
+  let rad = (currentHeading * Math.PI) / 180;
+  addPointToMeshCloud(Math.sin(rad) * distance, 0.2 + (Math.random() * 0.4), -Math.cos(rad) * distance);
+}
+
+const radarCanvas = document.getElementById('radar-canvas');
+const rctx = radarCanvas.getContext('2d');
+function drawRadarView() {
+  rctx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+  const cx = radarCanvas.width / 2;
+  let rad = ((currentHeading - 90) * Math.PI) / 180;
+  rctx.beginPath();
+  rctx.moveTo(cx, cx);
+  rctx.lineTo(cx + Math.cos(rad)*cx, cx + Math.sin(rad)*cx);
+  rctx.strokeStyle = '#60a5fa';
+  rctx.lineWidth = 2;
+  rctx.stroke();
+}
+
+const scopeCanvas = document.getElementById('scope-canvas');
+const sctx = scopeCanvas.getContext('2d');
+function drawOscilloscopeLoop() {
+  requestAnimationFrame(drawOscilloscopeLoop);
+  if (!analyser) return;
+  const arr = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(arr);
+  sctx.fillStyle = '#050814';
+  sctx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+  sctx.beginPath();
+  let sw = scopeCanvas.width / arr.length;
+  for (let i = 0; i < arr.length; i++) {
+    let y = ((arr[i] / 128.0) * scopeCanvas.height) / 2;
+    if (i === 0) sctx.moveTo(0, y); else sctx.lineTo(i * sw, y);
+  }
+  sctx.strokeStyle = '#3b82f6';
+  sctx.stroke();
+}
+
+let scene, camera, renderer, cloudPoints = [];
+function initThreeEngine() {
+  const container = document.getElementById('three-container');
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 500);
+  camera.position.set(0, 6, 8);
+  camera.lookAt(0, 0, 0);
+  const grid = new THREE.GridHelper(14, 14, 0x1e40af, 0x0f172a);
+  scene.add(grid);
+  function loop() { requestAnimationFrame(loop); renderer.render(scene, camera); }
+  loop();
+}
+
+function addPointToMeshCloud(x, y, z) {
+  const geo = new THREE.SphereGeometry(0.12, 6, 6);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x64748b });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  scene.add(mesh);
+  cloudPoints.push(mesh);
+  document.getElementById('point-count').textContent = cloudPoints.length;
+}
+
+function clearMap() { cloudPoints.forEach(p => scene.remove(p)); cloudPoints = []; document.getElementById('point-count').textContent = '0'; }
+function exportMap() {
+  const data = cloudPoints.map(p => ({ x: p.position.x.toFixed(3), y: p.position.y.toFixed(3), z: p.position.z.toFixed(3) }));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ dataset: data }, null, 2)], { type: 'application/json' }));
+  a.download = 'spatial_matrix_cloud.json';
+  a.click();
+}
+window.onload = () => { initThreeEngine(); drawRadarView(); };
+</script>
+</body>
+</html>
